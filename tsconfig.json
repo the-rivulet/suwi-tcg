@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "outDir": "javascript",
+    "module": "nodenext",
+    "allowSyntheticDefaultImports": true
+  }
+}

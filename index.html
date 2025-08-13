@@ -2,10 +2,28 @@
 <html>
   <head>
     <title>full of wawa.</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="assets/style.css">
   </head>
   <body>
-    <h2>haiii!! wawa!</h2>
-    <script type="module" src="client.js"></script>
+    <div id="noclicky"></div>
+    <div id="title">suwi-tcg<br/><span id="subtitle">ver. alpha-0</span></div>
+    <div id="login">
+      <div id="prelogin">
+        <input id="login-username" class="login-input" placeholder="Username...">
+        <div id="login-userinfo">enter a new username to create an account</div>
+        <input id="login-password" class="login-input" placeholder="Password...">
+        <div id="login-passinfo">please don't use your real password</div>
+        <button id="login-submit" class="btnthingy" disabled="true">fetching data...</button>
+      </div>
+      <div id="postlogin" style="display: none">
+        <div id="activeuser">logged in as <span id="activeusername">?</span></div>
+        <button id="logout" class="btnthingy">logout</button>
+      </div>
+    </div>
+    <div id="onlineusers">
+      Online Users:
+      <div id="onlineusers-list"></div>
+    </div>
+    <script type="module" src="javascript/client.js"></script>
   </body>
 </html>

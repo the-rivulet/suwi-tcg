@@ -1,7 +1,7 @@
 {
-  "name": "unicorns-tcg",
+  "name": "suwi-tcg",
   "version": "0.0.1",
-  "description": "tiny collectible card game about unicorns",
+  "description": "tiny collectible card game about unicorns n other ijo suwi",
   "type": "module",
   "dependencies": {
     "express": "^4.21.2",

@@ -1,0 +1,16 @@
+{
+  "accounts": [
+    {
+      "username": "rivulet",
+      "password": "rivulet"
+    },
+    {
+      "username": "rivulet2",
+      "password": "rivulet2"
+    },
+    {
+      "username": "nova",
+      "password": "slugcat"
+    }
+  ]
+}

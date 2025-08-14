@@ -11,13 +11,14 @@ export enum SuwiType {
 }
 export function isSoki(type: SuwiType) { return [SuwiType.BabySoki, SuwiType.BasicSoki, SuwiType.MagicalSoki].includes(type); }
 export let colorByType: Record<SuwiType, string> = {
-  [SuwiType.Instant]: "red",
-  [SuwiType.Downgrade]: "orange",
-  [SuwiType.Upgrade]: "yellow",
-  [SuwiType.Magic]: "lime",
-  [SuwiType.MagicalSoki]: "teal",
-  [SuwiType.BasicSoki]: "purple",
-  [SuwiType.BabySoki]: "magenta"
+  // yeah they're really pastel so what
+  [SuwiType.Instant]: "#faa",
+  [SuwiType.Downgrade]: "#fca",
+  [SuwiType.Upgrade]: "#ffa",
+  [SuwiType.Magic]: "#afa",
+  [SuwiType.MagicalSoki]: "#aaf",
+  [SuwiType.BasicSoki]: "#caf",
+  [SuwiType.BabySoki]: "#faf"
 }
 
 export abstract class SuwiCard {
@@ -33,7 +34,7 @@ export abstract class SuwiCard {
     image.src = "assets/cards/" + this.id + ".png";
     image.classList.add("suwiimage");
     this.element.appendChild(image);
-    this.element.innerHTML += `<div class="suwititle" color="${colorByType[this.type]}">${this.name}</div>`;
+    this.element.innerHTML += `<div class="suwititle" style="color: ${colorByType[this.type]}">${this.name}</div>`;
     return this.element;
   }
 }

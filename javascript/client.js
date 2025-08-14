@@ -318,7 +318,15 @@ gid("discarddeck").onclick = function () {
     gid("window-core").style.top = "0%";
     gid("window-deckeditor").style.top = "-100%";
 };
-socket.on("deck saved", function () {
+socket.on("deck saved", (info, overwritten) => {
     gid("window-core").style.top = "0%";
     gid("window-deckeditor").style.top = "-100%";
+    if (!overwritten) {
+        let el = document.createElement("div");
+        el.classList.add("decklist-item");
+        el.textContent = info.name;
+        gid("decklist").appendChild(el);
+        activeUser.decks[info.name] = info;
+        el.onclick = () => loadDeckView(activeUser.decks[info.name]);
+    }
 });

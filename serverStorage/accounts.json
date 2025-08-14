@@ -7,8 +7,21 @@
         "rivulet's first deck!": {
           "name": "rivulet's first deck!",
           "cards": {
-            "basicUnicorn2": 1,
-            "basicUnicorn1": 9
+            "basicUnicorn2": 3,
+            "basicUnicorn1": 10
+          }
+        },
+        "8 blue suns": {
+          "name": "8 blue suns",
+          "cards": {
+            "basicUnicorn1": 8
+          }
+        },
+        "!!!!!jank deck of total jankness!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!": {
+          "name": "!!!!!jank deck of total jankness!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+          "cards": {
+            "basicUnicorn2": 2,
+            "basicUnicorn1": 8
           }
         }
       },

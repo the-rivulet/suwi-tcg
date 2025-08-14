@@ -74,11 +74,12 @@ io.on("connection", socket => {
         io.emit("online users update", onlineUsers);
     });
     socket.on("save deck", (info) => {
+        let overwritten = Object.keys(data.accounts[thisUser].decks).includes(info.name);
         // again, assume things are probably ok. overwrite the deck if it exists
         data.accounts[thisUser].decks[info.name] = info;
         // store their deck into the file system
         writeFileSync(join(__dirname, "..", "serverStorage", "accounts.json"), JSON.stringify(data, undefined, 2));
-        socket.emit("deck saved");
+        socket.emit("deck saved", info, overwritten);
     });
     socket.on("disconnect", () => {
         console.log(`${socket.id} (${thisUser || "<anonymous user>"}) disconnected`);

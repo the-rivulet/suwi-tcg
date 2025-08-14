@@ -1,28 +1,49 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>full of wawa.</title>
+    <title>SuwiTCG!</title>
     <link rel="stylesheet" href="assets/style.css">
   </head>
   <body>
     <div id="noclicky"></div>
-    <div id="title">suwi-tcg<br/><span id="subtitle">ver. alpha-0</span></div>
-    <div id="login">
-      <div id="prelogin">
-        <input id="login-username" class="login-input" placeholder="Username...">
-        <div id="login-userinfo">enter a new username to create an account</div>
-        <input id="login-password" class="login-input" placeholder="Password...">
-        <div id="login-passinfo">please don't use your real password</div>
-        <button id="login-submit" class="btnthingy" disabled="true">fetching data...</button>
+    <div id="window-core" class="window" style="opacity: 0.5">
+      <div id="title">suwi-tcg<br/><span id="subtitle">ver. alpha-1</span></div>
+      <div id="login">
+        <div id="prelogin">
+          <input id="login-username" class="login-input" placeholder="Username..." value="rivulet"> <!-- remember to erase this!! -->
+          <div id="login-userinfo">enter a new username to create an account</div>
+          <input id="login-password" class="login-input" placeholder="Password..." value="rivulet">
+          <div id="login-passinfo">please don't use your real password</div>
+          <button id="login-submit" class="btnthingy" disabled="true">fetching data...</button>
+        </div>
+        <div id="postlogin" style="display: none">
+          <div id="activeuser">logged in as <span id="activeusername">?</span></div>
+          <button id="logout" class="btnthingy">logout</button>
+          <hr/>
+          <div id="yourdecksheader">your decks:</div>
+          <div id="decklist"></div>
+          <button id="newdeck" class="btnthingy">+ create new deck</button><br/>
+          <input id="deckimporter" class="login-input" placeholder="Import deck...">
+        </div>
+        <br/><br/><br/> <!-- extra space cause it looks nice idk -->
       </div>
-      <div id="postlogin" style="display: none">
-        <div id="activeuser">logged in as <span id="activeusername">?</span></div>
-        <button id="logout" class="btnthingy">logout</button>
+      <div id="onlineusers">
+        Online Users:
+        <div id="onlineusers-list"></div>
       </div>
     </div>
-    <div id="onlineusers">
-      Online Users:
-      <div id="onlineusers-list"></div>
+    <div id="window-deckeditor" class="window" style="top: -100%">
+      <div id="editorarea">
+        Deck: <input id="deckname" class="login-input" placeholder="Deck name..."><br/>
+        <div id="in-deck" class="cardarea"></div>
+        Collection:
+        <div id="in-collection" class="cardarea"></div>
+      </div>
+      <button id="savedeck" class="btnthingy derst" disabled="true">create</button>
+      <div id="savedeck-info" class="derst">needs some cards!</div>
+      <button id="copydeck" class="btnthingy derst">copy to clipboard</button>
+      <div id="copydeck-info" class="derst">as JSON</div>
+      <button id="discarddeck" class="btnthingy derst">discard</button>
     </div>
     <script type="module" src="javascript/client.js"></script>
   </body>

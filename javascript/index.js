@@ -5,6 +5,7 @@ import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { readFile, writeFileSync } from "node:fs";
+import { cardIDList } from "./clibrary.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const app = express(), server = createServer(app), io = new Server(server);
@@ -20,8 +21,12 @@ function serveStaticFile(filename) {
 serveStaticFile("javascript/client.js");
 serveStaticFile("javascript/cglobals.js");
 serveStaticFile("javascript/cdecks.js");
+serveStaticFile("javascript/clibrary.js");
 serveStaticFile("assets/style.css");
-let data = { accounts: [] };
+for (let i of Object.keys(cardIDList)) {
+    serveStaticFile(`assets/cards/${i}.png`);
+}
+let data = { accounts: {} };
 let onlineUsers = [];
 let loaded = false;
 // Retrieve info from last load
@@ -36,24 +41,27 @@ io.on("connection", socket => {
     let thisUser = ""; // this user's username
     console.log(socket.id + " connected");
     // send them some helpful info, like the registered username list (so it can check if it's a new user or not)
-    socket.emit("hello", loaded, data.accounts.map(x => x.username), onlineUsers);
+    socket.emit("hello", loaded, Object.keys(data.accounts), onlineUsers);
     socket.on("login attempt", (aUsername, aPassword) => {
         // just assume that their info is ok :slugshrug:
-        if (data.accounts.map(x => x.username).includes(aUsername)) {
+        if (Object.keys(data.accounts).includes(aUsername)) {
             // old user!
-            if (data.accounts.find(x => x.username == aUsername).password == aPassword) {
-                socket.emit("login response", true, false, aUsername, aPassword);
+            if (onlineUsers.includes(aUsername)) {
+                socket.emit("login response", "already online", { username: aUsername, password: aPassword });
+            }
+            else if (data.accounts[aUsername].password == aPassword) {
+                socket.emit("login response", "ok", data.accounts[aUsername]);
             }
             else {
-                socket.emit("login response", false, false, aUsername, aPassword);
+                socket.emit("login response", "bad password", { username: aUsername, password: aPassword });
             }
         }
         else {
-            // new user!
-            data.accounts.push({ username: aUsername, password: aPassword });
+            // new user! give em some starting cards
+            data.accounts[aUsername] = { username: aUsername, password: aPassword, decks: {}, collection: { "basicUnicorn1": 20, "basicUnicorn2": 3 } };
             // write their name into the file system
             writeFileSync(join(__dirname, "..", "serverStorage", "accounts.json"), JSON.stringify(data, undefined, 2));
-            socket.emit("login response", true, true, aUsername, aPassword);
+            socket.emit("login response", "ok", data.accounts[aUsername]);
         }
     });
     socket.on("login done", (username) => {
@@ -65,8 +73,15 @@ io.on("connection", socket => {
         onlineUsers.splice(onlineUsers.indexOf(username), 1);
         io.emit("online users update", onlineUsers);
     });
+    socket.on("save deck", (info) => {
+        // again, assume things are probably ok. overwrite the deck if it exists
+        data.accounts[thisUser].decks[info.name] = info;
+        // store their deck into the file system
+        writeFileSync(join(__dirname, "..", "serverStorage", "accounts.json"), JSON.stringify(data, undefined, 2));
+        socket.emit("deck saved");
+    });
     socket.on("disconnect", () => {
-        console.log(`${socket.id}(${thisUser || "anonymous"}) disconnected`);
+        console.log(`${socket.id} (${thisUser || "<anonymous user>"}) disconnected`);
         if (thisUser) {
             onlineUsers.splice(onlineUsers.indexOf(thisUser), 1);
             io.emit("online users update", onlineUsers);

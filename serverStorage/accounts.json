@@ -1,16 +1,21 @@
 {
-  "accounts": [
-    {
+  "accounts": {
+    "rivulet": {
       "username": "rivulet",
-      "password": "rivulet"
-    },
-    {
-      "username": "rivulet2",
-      "password": "rivulet2"
-    },
-    {
-      "username": "nova",
-      "password": "slugcat"
+      "password": "rivulet",
+      "decks": {
+        "rivulet's first deck!": {
+          "name": "rivulet's first deck!",
+          "cards": {
+            "basicUnicorn2": 1,
+            "basicUnicorn1": 9
+          }
+        }
+      },
+      "collection": {
+        "basicUnicorn1": 20,
+        "basicUnicorn2": 3
+      }
     }
-  ]
+  }
 }

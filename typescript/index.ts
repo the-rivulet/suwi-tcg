@@ -25,12 +25,15 @@ serveStaticFile("javascript/client.js");
 serveStaticFile("javascript/cglobals.js");
 serveStaticFile("javascript/cdecks.js");
 serveStaticFile("javascript/clibrary.js");
+serveStaticFile("javascript/cbattling.js");
 serveStaticFile("assets/style.css");
+serveStaticFile("assets/playmat.jpg");
 for(let i of Object.keys(cardIDList)) { serveStaticFile(`assets/cards/${i}.png`); }
 
 let data: DataInfo = {accounts: {}};
 let onlineUsers: string[] = [];
 let loaded = false;
+let activeBattles: Record<string, string> = {};
 // Retrieve info from last load
 readFile(join(__dirname, "..", "serverStorage", "accounts.json"), (err, result) => {
   if (err) throw err;
@@ -41,7 +44,7 @@ readFile(join(__dirname, "..", "serverStorage", "accounts.json"), (err, result) 
 // Handle client stuff (this is the important part)
 io.on("connection", socket => {
   let thisUser = ""; // this user's username
-  console.log(socket.id + " connected");
+  console.log(`Socket ${socket.id} connected.`);
   // send them some helpful info, like the registered username list (so it can check if it's a new user or not)
   socket.emit("hello", loaded, Object.keys(data.accounts), onlineUsers);
   socket.on("login attempt", (aUsername: string, aPassword: string) => {
@@ -52,6 +55,7 @@ io.on("connection", socket => {
         socket.emit("login response", "already online", {username: aUsername, password: aPassword});
       } else if(data.accounts[aUsername].password == aPassword) {
         socket.emit("login response", "ok", data.accounts[aUsername]);
+        console.log(`Socket ${socket.id} logged in as ${aUsername} with password ${aPassword}.`);
       } else {
         socket.emit("login response", "bad password", {username: aUsername, password: aPassword});
       }
@@ -60,16 +64,20 @@ io.on("connection", socket => {
       data.accounts[aUsername] = {username: aUsername, password: aPassword, decks: {}, collection: {"basicUnicorn1": 20, "basicUnicorn2": 3}};
       // write their name into the file system
       writeFileSync(join(__dirname, "..", "serverStorage", "accounts.json"), JSON.stringify(data, undefined, 2));
+      console.log(`Created a new account for ${aUsername} with password ${aPassword} on socket ${socket.id}.`);
       socket.emit("login response", "ok", data.accounts[aUsername]);
     }
   });
   socket.on("login done", (username: string) => {
     thisUser = username;
     onlineUsers.push(username);
+    socket.join(username); // put em in their own little room!
     io.emit("online users update", onlineUsers);
   });
   socket.on("logout", (username: string) => {
     onlineUsers.splice(onlineUsers.indexOf(username), 1);
+    socket.leave(username);
+    console.log(`Socket ${socket.id} logged out of their account (${username}).`);
     io.emit("online users update", onlineUsers);
   });
   socket.on("save deck", (info: DeckInfo) => {
@@ -78,11 +86,50 @@ io.on("connection", socket => {
     data.accounts[thisUser].decks[info.name] = info;
     // store their deck into the file system
     writeFileSync(join(__dirname, "..", "serverStorage", "accounts.json"), JSON.stringify(data, undefined, 2));
+    console.log(`${thisUser} ${overwritten ? "updated" : "created"} a deck named ${info.name}.`);
     socket.emit("deck saved", info, overwritten);
   });
+  socket.on("request user info", (otherUser: string) => {
+    if(Object.keys(data.accounts).includes(otherUser)) {
+      socket.emit("sent user info", true, {"username": otherUser, "decks": data.accounts[otherUser].decks});
+    } else {
+      socket.emit("sent user info", false, {"username": otherUser, "decks": {}});
+    }
+  });
+  socket.on("request battle", (otherUser: string) => {
+    console.log(thisUser + " wants to battle " + otherUser + ".");
+    if(!onlineUsers.includes(otherUser)) socket.emit("battle ready", "user isn't online");
+    else if(!Object.keys(data.accounts).includes(otherUser)) socket.emit("battle ready", "user doesn't exist");
+    else if(activeBattles[otherUser]) socket.emit("battle ready", "user is already battling");
+    else if(Object.values(data.accounts[thisUser]?.decks).length == 0) socket.emit("battle ready", "you have no decks");
+    else if(Object.values(data.accounts[otherUser]?.decks).length == 0) socket.emit("battle ready", "user has no decks");
+    else {
+      console.log(`${thisUser} is requesting a battle with ${otherUser}.`);
+      activeBattles[thisUser] = otherUser;
+      // the 1 second delay is so that I can quickly switch tabs to the other user (window.confirm doesn't fire if unfocused)
+      setTimeout(() => { io.to(otherUser).emit("someone wants to battle you!", thisUser); }, 1000);
+    }
+  });
+  socket.on("cancel battle request", () => {
+    console.log(`${thisUser} canceled their request to ${activeBattles[thisUser]}.`);
+    activeBattles[thisUser] = undefined;
+  });
+  socket.on("yeah I want to battle!", (sender: string) => {
+    if(activeBattles[sender] != thisUser) return; // guess they canceled or disconnected...
+    // ok here we go
+    activeBattles[thisUser] = sender;
+    socket.emit("battle ready", "ok", sender);
+    io.to(sender).emit("battle ready", "ok", thisUser);
+  });
   socket.on("disconnect", () => {
-    console.log(`${socket.id} (${thisUser || "<anonymous user>"}) disconnected`);
+    console.log(`Socket ${socket.id} (${thisUser || "<anonymous user>"}) disconnected.`);
     if(thisUser) {
+      // todo: actually stop the battle
+      if(activeBattles[thisUser]) {
+        console.log(`Canceled the battle between ${thisUser} and ${activeBattles[thisUser]} because ${thisUser} disconnected.`);
+        activeBattles[activeBattles[thisUser]] = undefined;
+        activeBattles[thisUser] = undefined;
+      }
       onlineUsers.splice(onlineUsers.indexOf(thisUser), 1);
       io.emit("online users update", onlineUsers);
     }
@@ -90,6 +137,7 @@ io.on("connection", socket => {
 });
 
 // Start the server!
-server.listen(3001, () => {
-  console.log("running! :3");
+let PORT = 3001;
+server.listen(PORT, () => {
+  console.log(`The server is running on port ${PORT}.`);
 });

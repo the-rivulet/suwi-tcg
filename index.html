@@ -7,7 +7,7 @@
   <body>
     <div id="noclicky"></div>
     <div id="window-core" class="window" style="opacity: 0.5">
-      <div id="title">suwi-tcg<br/><span id="subtitle">ver. alpha-1B</span></div>
+      <div id="title">suwi-tcg<br/><span id="subtitle">ver. alpha-2</span></div>
       <div id="login">
         <div id="prelogin">
           <input id="login-username" class="login-input" placeholder="Username..." value="rivulet"> <!-- remember to erase this!! -->
@@ -20,7 +20,7 @@
           <div id="activeuser">logged in as <span id="activeusername">?</span></div>
           <button id="logout" class="btnthingy">logout</button>
           <hr/>
-          <div id="yourdecksheader">your decks:</div>
+          <div class="decksheader">your decks:</div>
           <div id="decklist"></div>
           <button id="newdeck" class="btnthingy">+ create new deck</button><br/>
           <input id="deckimporter" class="login-input" placeholder="Import deck...">
@@ -44,6 +44,29 @@
       <button id="copydeck" class="btnthingy derst">copy to clipboard</button>
       <div id="copydeck-info" class="derst">as JSON</div>
       <button id="discarddeck" class="btnthingy derst">discard</button>
+    </div>
+    <div id="window-user" class="window" style="top: -100%">
+      <div id="viewed-name"></div>
+      <div id="centerthing">
+        <button id="battle" class="btnthingy" disabled="true">battle!</button>
+        <div class="decksheader">their decks:</div>
+        <div id="decklist2"></div>
+        <br/><br/><br/> <!-- extra space cause it looks nice idk -->
+      </div>
+      <br/>
+      <button id="goback" class="btnthingy">back</button>
+    </div>
+    <div id="window-battle" class="window" style="top: -100%">
+      <div id="enemy-hand" class="enemy playerhand"></div>
+      <div id="your-hand" class="your playerhand"></div>
+      <div id="enemy-discard" class="enemy discardpile"></div>
+      <div id="your-discard" class="your discardpile"></div>
+      <div id="enemy-stable" class="stable"></div>
+      <div id="your-stable" class="stable"></div>
+      <div id="centerarea">
+        <span id="centertext"></span>
+        <button id="pass">>></button>
+      </div>
     </div>
     <script type="module" src="javascript/client.js"></script>
   </body>

@@ -4,6 +4,7 @@ import { io } from "https://cdn.socket.io/4.8.1/socket.io.esm.min.js";
 import { gid, hasBadChar } from "./cglobals.js";
 import { cardByID } from "./clibrary.js";
 import { SuwiCollectionCard } from "./cdecks.js";
+import { beginBattle, requestBattle } from "./cbattling.js";
 // just to have a nice loading screen and make sure the js is workin'
 function whenLoaded() {
     gid("window-core").style.opacity = "1";
@@ -104,7 +105,7 @@ function whenLoaded() {
             sdi.textContent = "what is that card?";
             problem = true;
         }
-        else if (Object.keys(activeUser?.decks)?.includes(dn)) {
+        else if (Object.keys(activeUser ? activeUser.decks : {}).includes(dn)) {
             sdi.style.color = "lime";
             sdi.textContent = "deck looks ok!";
             problem = false;
@@ -115,7 +116,7 @@ function whenLoaded() {
             problem = false;
         }
         sd.disabled = problem;
-        sd.textContent = (Object.keys(activeUser?.decks)?.includes(dn)) ? "save" : "create";
+        sd.textContent = (Object.keys(activeUser ? activeUser.decks : {}).includes(dn)) ? "save" : "create";
         // ok this one might be bad for performance... check constantly to see whether the import field is okay or not
         problem = false;
         if (gid("deckimporter").value.length) {
@@ -132,8 +133,21 @@ function whenLoaded() {
         gid("newdeck").disabled = problem;
     }, 25); // 40 fps should be enough
 }
-function updateOnlineUsers(onlineUsers) {
-    gid("onlineusers-list").innerHTML = onlineUsers.map(x => `<div class="online-user${x == activeUser?.username ? " online-active" : ""}">${x}</div>`).join("");
+let onlineUsers = [];
+function updateOnlineUsers(users) {
+    onlineUsers = users;
+    gid("onlineusers-list").innerHTML = "";
+    for (let i of onlineUsers) {
+        let el = document.createElement("div");
+        el.classList.add("online-user");
+        if (i == activeUser?.username)
+            el.classList.add("online-active");
+        el.textContent = i;
+        el.onclick = function () {
+            socket.emit("request user info", i);
+        };
+        gid("onlineusers-list").appendChild(el);
+    }
 }
 let socket = io(), loaded = false;
 let usernames = [], pwdError = "";
@@ -192,18 +206,22 @@ gid("logout").onclick = function () {
 let elsInDeck = {}, elsInCollection = {}; // also used for deck editing
 function loadDeckView(deckToImport = { "name": "new deck", "cards": {} }) {
     // first make sure that I can actually load it!
-    for (let i in deckToImport) {
+    let canImport = true;
+    for (let i in deckToImport.cards) {
+        console.log((activeUser.collection[i] ?? 0) + " " + deckToImport.cards[i]);
         if ((activeUser.collection[i] ?? 0) < deckToImport.cards[i]) {
+            if (canImport)
+                navigator.clipboard.writeText(JSON.stringify(deckToImport));
+            canImport = false;
             let missingCard = new (cardByID(i))().name;
-            alert("not enough of " + missingCard + " in your collection! the deck needs " + deckToImport.cards[i] + " but " + (activeUser.collection[i] ? "you only have " + activeUser.collection[i] : "you don't have any") + ". so sad");
+            alert("Not enough " + missingCard + " in your collection! The deck needs " + deckToImport.cards[i] + " but " + (activeUser.collection[i] ? "you only have " + activeUser.collection[i] : "you don't have any") + ". so sad.\nI copied the full decklist to your clipboard, maybe save it somewhere?");
             deckToImport.cards[i] = (activeUser.collection[i] ?? 0);
         }
     }
     gid("window-core").style.top = "-100%";
+    gid("window-user").style.top = "-100%";
     gid("window-deckeditor").style.top = "0%";
     gid("deckname").value = deckToImport.name;
-    gid("in-deck").innerHTML = "";
-    gid("in-collection").innerHTML = "";
     // put the cards in!
     for (let i of Object.keys(activeUser.collection)) {
         if (activeUser.collection[i] == 0)
@@ -296,15 +314,19 @@ gid("newdeck").onclick = () => {
 };
 gid("savedeck").onclick = function () {
     let deckInfo = { name: gid("deckname").value, cards: {} };
-    for (let i in elsInDeck)
-        deckInfo.cards[i] = elsInDeck[i].qty;
+    for (let i in elsInDeck) {
+        if (elsInDeck[i])
+            deckInfo.cards[i] = elsInDeck[i].qty;
+    }
     socket.emit("save deck", deckInfo);
 };
 gid("copydeck").onclick = function () {
     // send it to the clipboard
     let deckInfo = { name: gid("deckname").value, cards: {} };
-    for (let i in elsInDeck)
-        deckInfo.cards[i] = elsInDeck[i].qty;
+    for (let i in elsInDeck) {
+        if (elsInDeck[i])
+            deckInfo.cards[i] = elsInDeck[i].qty;
+    }
     let str = JSON.stringify(deckInfo);
     navigator.clipboard.writeText(str).then(() => {
         gid("copydeck-info").style.color = "lime";
@@ -317,10 +339,18 @@ gid("copydeck").onclick = function () {
 gid("discarddeck").onclick = function () {
     gid("window-core").style.top = "0%";
     gid("window-deckeditor").style.top = "-100%";
+    gid("in-deck").innerHTML = "";
+    gid("in-collection").innerHTML = "";
+    elsInDeck = {};
+    elsInCollection = {};
 };
 socket.on("deck saved", (info, overwritten) => {
     gid("window-core").style.top = "0%";
     gid("window-deckeditor").style.top = "-100%";
+    gid("in-deck").innerHTML = "";
+    gid("in-collection").innerHTML = "";
+    elsInDeck = {};
+    elsInCollection = {};
     if (!overwritten) {
         let el = document.createElement("div");
         el.classList.add("decklist-item");
@@ -328,5 +358,50 @@ socket.on("deck saved", (info, overwritten) => {
         gid("decklist").appendChild(el);
         activeUser.decks[info.name] = info;
         el.onclick = () => loadDeckView(activeUser.decks[info.name]);
+    }
+});
+gid("goback").onclick = () => {
+    gid("window-user").style.top = "-100%";
+    gid("window-core").style.top = "0%";
+};
+socket.on("sent user info", (ok, info) => {
+    if (!ok)
+        return;
+    gid("window-core").style.top = "-100%";
+    gid("window-user").style.top = "0%";
+    gid("viewed-name").textContent = info.username;
+    gid("decklist2").textContent = "";
+    for (let i in info.decks) {
+        let el = document.createElement("div");
+        el.classList.add("decklist-item");
+        el.textContent = i;
+        gid("decklist2").appendChild(el);
+        el.onclick = () => {
+            loadDeckView(info.decks[i]);
+        };
+    }
+    gid("battle").disabled = (!onlineUsers.includes(info.username) || info.username == activeUser?.username || Object.values(activeUser?.decks).length == 0 || Object.values(info.decks).length == 0);
+    gid("battle").onclick = () => {
+        requestBattle(socket, info.username);
+    };
+});
+socket.on("someone wants to battle you!", (sender) => {
+    let response = confirm(sender + " wants to battle you! is that ok?");
+    if (response) {
+        gid("window-core").style.top = "-100%";
+        gid("window-deckeditor").style.top = "-100%";
+        gid("window-user").style.top = "-100%";
+        gid("window-battle").style.top = "0%";
+        socket.emit("yeah I want to battle!", sender);
+    }
+});
+socket.on("battle ready", (status, opponent) => {
+    if (status == "ok") {
+        beginBattle(socket, opponent);
+    }
+    else {
+        gid("window-battle").style.top = "-100%";
+        gid("window-core").style.top = "0%";
+        alert("problem while requesting battle: " + status);
     }
 });

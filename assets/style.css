@@ -18,7 +18,14 @@ body {
 #window-deckeditor {
   background: #101;
 }
-#title {
+#window-user {
+  background: #101;
+}
+#window-battle {
+  background-image: url("playmat.jpg");
+  background-size: cover;
+}
+#title, #viewed-name {
   position: absolute;
   left: 0;
   top: 10%;
@@ -85,7 +92,7 @@ button {
   color: #aaa;
   margin-bottom: 20px;
 }
-#activeuser, #yourdecksheader {
+#activeuser, .decksheader {
   margin-bottom: 10px;
 }
 #noclicky {
@@ -146,7 +153,6 @@ button {
 }
 .suwicard.unavailable {
   border: 1px solid gray;
-  color: #aaa;
   opacity: 0.7;
   cursor: not-allowed;
 }
@@ -207,4 +213,81 @@ button {
 #deckimporter {
   width: 80%;
   margin-top: 10px;
+}
+#centerthing {
+  position: absolute;
+  top: 30%;
+  left: 35%;
+  width: 30%;
+  background: #202;
+  text-align: center;
+  padding: 10px;
+  border-radius: 15px;
+  transition: 0.3s;
+}
+#goback {
+  position: absolute;
+  bottom: 100px;
+  left: 35%;
+  width: 30%;
+  background: #424;
+}
+#battle {
+  margin-bottom: 20px;
+}
+.playerhand {
+  background: #000c;
+  position: absolute;
+  left: 0;
+  width: calc(100% - 110px);
+  height: 110px;
+}
+.discardpile {
+  background: #000;
+  position: absolute;
+  right: 0;
+  width: 110px;
+  height: 110px;
+}
+.stable {
+  background: #0005;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: calc(50% - 125px);
+}
+.enemy {
+  top: 0;
+}
+.your {
+  bottom: 0;
+}
+#enemy-stable {
+  top: 110px;
+}
+#your-stable {
+  bottom: 110px;
+}
+#centerarea {
+  background: #0007;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  top: calc(50% - 15px);
+  height: 30px;
+  font-size: 30px;
+}
+#pass {
+  padding: 10px;
+  border-radius: 10px;
+  width: 80px;
+  background: teal;
+  color: white;
+  border: none;
+  transition: 0.3s;
+  font-size: 16px;
+  cursor: pointer;
+  position: absolute;
+  right: 0;
+  height: 100%;
 }

@@ -13,6 +13,10 @@ export type AccountInfo = {
   "decks": Record<string, DeckInfo>,
   "collection": Record<string, number>
 }
+export type AccountPublicInfo = {
+  "username": string,
+  "decks": Record<string, DeckInfo>
+}
 export type DataInfo = {
   "accounts": Record<string, AccountInfo>
 }
